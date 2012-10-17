@@ -17,10 +17,10 @@ tools in the future with an additional investment of effort.
 
    We initially targeted NNF, BDS, image retargeting, and image retargeting
 with constraints.  We were only able to get NNF, BDS, and image retargeting
-completed.  We have to applications to show off these:
+completed.  We have to applications to demonstrate the following:
     
-    * **reconstruct** - reconstruct an image only using data from another image
-    * **retarget** - do a "retarget" resizing of an image
+    *  **reconstruct** - reconstruct an image only using data from another image
+    *  **retarget** - perform a "retargeted" resizing of an image
     
 2. We used Middlebury Stereoscopic Datasets from 2006:
 
@@ -90,7 +90,7 @@ for reconstruction and 20x speed up for retargeting.
   
   This is for a single BDS run (with 5 BDS calls and 25 NNF calls) with retarget.
 
-6. A number of improvements enhancements could be made:
+6. A number of improvements/enhancements could be made:
 
    * Better random number generation, particularly in GPU code.  This seems to be the major 
      source of difference in the quality results produced by reconstruct. Try the images of the baby.
