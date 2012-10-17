@@ -47,8 +47,8 @@ int main ( int argc, char **argv ) {
 
   LoadBMPFile( &h_fst, &fWidth, &fHeight, argv[2] );
 
-  int type = atoi(argv[1]);
-  int newWidth = atoi(argv[3]);
+  int type      = atoi(argv[1]);
+  int newWidth  = atoi(argv[3]);
   int newHeight = atoi(argv[4]);
  
   if ( ( newWidth == fWidth ) && ( newHeight == fHeight ) ) {
@@ -58,8 +58,8 @@ int main ( int argc, char **argv ) {
 
   /******************************************************************************/
   // CPU iteration loop
-  float totalTime = 0;
-  float maxErr = 0;
+  float totalTime    = 0;
+  float maxErr       = 0;
   unsigned int timer = 0;
 
   switch (type) {
@@ -88,7 +88,7 @@ int main ( int argc, char **argv ) {
   int  diffHeight = abs(newHeight-fHeight);
   bool growHeight = newHeight > fHeight;
 
-  int curWidth = fWidth;
+  int curWidth  = fWidth;
   int curHeight = fHeight;
 
   uchar4 *curImage = h_fst;
@@ -96,14 +96,14 @@ int main ( int argc, char **argv ) {
   while ((diffWidth > 0) || (diffHeight > 0)) {
 
     // 5% change
-    int changeWidth = fWidth/20;
+    int changeWidth  = fWidth/20;
     int changeHeight = fHeight/20;
 
-    int nextWidth = curWidth;
-    int nextHeight = curHeight;
+    int nextWidth    = curWidth;
+    int nextHeight   = curHeight;
 
-    changeWidth = min(diffWidth,max(changeWidth, MIN_RETARGET));
-    changeHeight = min(diffHeight,max(changeHeight, MIN_RETARGET));
+    changeWidth      = min(diffWidth,max(changeWidth, MIN_RETARGET));
+    changeHeight     = min(diffHeight,max(changeHeight, MIN_RETARGET));
 
     if ( growWidth ) {
       nextWidth += changeWidth;
@@ -123,18 +123,18 @@ int main ( int argc, char **argv ) {
 
     switch (type) {
 
-    case 1: 
-      bidirectional_similarity_cpu_cpu( h_fst, fWidth, fHeight, curImage, curWidth, curHeight, &h_snd, nextWidth, nextHeight );
-      break;
-    case 2:
-      bidirectional_similarity_cpu_gpu( h_fst, fWidth, fHeight, curImage, curWidth, curHeight, &h_snd, nextWidth, nextHeight );
-      break;
-    case 3:
-      bidirectional_similarity_gpu_gpu( h_fst, fWidth, fHeight, curImage, curWidth, curHeight, &h_snd, nextWidth, nextHeight, ( ( nextWidth != newWidth) || ( nextHeight != newHeight ) ) );
-      break;
-    default:
-      printf( "Invalid type! Must be 1,2, or 3\n");
-      exit( 1 );
+      case 1: 
+        bidirectional_similarity_cpu_cpu( h_fst, fWidth, fHeight, curImage, curWidth, curHeight, &h_snd, nextWidth, nextHeight );
+        break;
+      case 2:
+        bidirectional_similarity_cpu_gpu( h_fst, fWidth, fHeight, curImage, curWidth, curHeight, &h_snd, nextWidth, nextHeight );
+        break;
+      case 3:
+        bidirectional_similarity_gpu_gpu( h_fst, fWidth, fHeight, curImage, curWidth, curHeight, &h_snd, nextWidth, nextHeight, ( ( nextWidth != newWidth) || ( nextHeight != newHeight ) ) );
+        break;
+      default:
+        printf( "Invalid type! Must be 1, 2, or 3\n");
+        exit( 1 );
     }
 
     if (curImage != h_fst) {

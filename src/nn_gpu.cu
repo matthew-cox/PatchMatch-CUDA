@@ -145,7 +145,7 @@ float nn_search_gpu( uchar4 *first, int fWidth, int fHeight, uchar4 *second, int
 
        for ( int f = 0; f < R_SEEDS; f++ ) {
 
-       printf( "%i is '%i'\n", f, rands[f] );
+          printf( "%i is '%i'\n", f, rands[f] );
        }*/
 
     // vizuaize the iterations
@@ -199,7 +199,7 @@ __global__ void rand_kernel( int *R_dev ) {
 
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   int idy = blockIdx.y * blockDim.y + threadIdx.y;
-  int f = ( idy * C_fW ) + idx;
+  int   f = ( idy * C_fW ) + idx;
   //unsigned int r = R_dev[f];
 
     //r = r * 1103515245L + 12345; //(((float) (r % 65535) / 65535))
@@ -207,7 +207,7 @@ __global__ void rand_kernel( int *R_dev ) {
     //R_dev[f] = cardinal;
     //R_dev[f] = R_dev[f] % 4;
     //R_dev[f] = fib_rand( R_de v, idx % R_SEEDS ) % 4;
-		R_dev[f] = ( R_dev[ f - 100 ] - R_dev[ f - 37 ] ) % 1073741824L % 4;
+    R_dev[f] = ( R_dev[ f - 100 ] - R_dev[ f - 37 ] ) % 1073741824L % 4;
 }
 
 __global__ void nn_search_kernel( int *R_dev, uchar4 *F_dev, mapent *curMap_dev, mapent *newMap_dev ) {
@@ -255,11 +255,11 @@ __global__ void nn_search_kernel( int *R_dev, uchar4 *F_dev, mapent *curMap_dev,
       // and it is not on the edge of the "second" image
       if ( ( curMap_dev[ nearIdx ].dist < dist ) && ( curMap_dev[ nearIdx ].x > 0 ) ) {
 
-	// left patch has better dist
-	sx   = curMap_dev[ nearIdx ].x - 1; 
-	sy   = curMap_dev[ nearIdx ].y; 
-	//dist = nn_dist_patch_gpu( F_dev, idx, idy, S_dev, sx, sy );
-	dist = nn_dist_patch_gpu( F_dev, idx, idy, sx, sy );
+        // left patch has better dist
+        sx   = curMap_dev[ nearIdx ].x - 1; 
+        sy   = curMap_dev[ nearIdx ].y; 
+        //dist = nn_dist_patch_gpu( F_dev, idx, idy, S_dev, sx, sy );
+        dist = nn_dist_patch_gpu( F_dev, idx, idy, sx, sy );
       }
     }
       
@@ -272,11 +272,11 @@ __global__ void nn_search_kernel( int *R_dev, uchar4 *F_dev, mapent *curMap_dev,
       // and it is not on the top edge of the "second" image
       if ( ( curMap_dev[ nearIdx ].dist < dist ) && ( curMap_dev[ nearIdx ].y > 0 ) ) {
 
-	// up patch has better dist
-	sx   = curMap_dev[ nearIdx ].x; 
-	sy   = curMap_dev[ nearIdx ].y - 1; 
-	//dist = nn_dist_patch_gpu( F_dev, idx, idy, S_dev, sx, sy ); 
-	dist = nn_dist_patch_gpu( F_dev, idx, idy, sx, sy ); 
+        // up patch has better dist
+        sx   = curMap_dev[ nearIdx ].x; 
+        sy   = curMap_dev[ nearIdx ].y - 1; 
+        //dist = nn_dist_patch_gpu( F_dev, idx, idy, S_dev, sx, sy ); 
+        dist = nn_dist_patch_gpu( F_dev, idx, idy, sx, sy ); 
       }
     }
 
@@ -291,58 +291,58 @@ __global__ void nn_search_kernel( int *R_dev, uchar4 *F_dev, mapent *curMap_dev,
       rx = ry = picked = 0;
       while ( !picked ) {
 
-	// choose north, south, east or west
-	r = r * 1103515245 + 12345;
-	int cardinal = (r % 65535) % 4;
-	//R_dev[f] = (long)( R_dev[f - 100] - R_dev[f - 37] ) % 1073741824L;
-	//int cardinal = R_dev[f] % 4;
+        // choose north, south, east or west
+        r = r * 1103515245 + 12345;
+        int cardinal = (r % 65535) % 4;
+        //R_dev[f] = (long)( R_dev[f - 100] - R_dev[f - 37] ) % 1073741824L;
+        //int cardinal = R_dev[f] % 4;
 
-	// store this to save operations
-	r = r * 1103515245 + 12345;
-	int myRand = R_dev[ (r % 65535) % fPix ];
-	//R_dev[f] = (long)( R_dev[f - 100] - R_dev[f - 37] ) % 1073741824L;
-	//int myRand = R_dev[f] % fPix;
-	//int myRand = rands[ (r % 65535) % fPix ];
+        // store this to save operations
+        r = r * 1103515245 + 12345;
+        int myRand = R_dev[ (r % 65535) % fPix ];
+        //R_dev[f] = (long)( R_dev[f - 100] - R_dev[f - 37] ) % 1073741824L;
+        //int myRand = R_dev[f] % fPix;
+        //int myRand = rands[ (r % 65535) % fPix ];
 
-	// little switch to select a patch on the edge of radius
-	if ( cardinal == 0 && sy - radius > 0 ) {
-	  ry = sy - radius;
-	  rx = myRand - C_hp + sx;
-	  rx = min( C_sW - 1, max( 0, rx ) );
-	  picked = 1;
-	}
-	else if ( cardinal == 1 && sx - radius > 0 ) {
-	  ry = myRand - C_hp + sy;
-	  ry = min( C_sH - 1, max( 0, ry ) );
-	  rx = sx - radius;
-	  picked = 1;
-	}
-	else if ( cardinal == 2 && sy + radius < C_sH ) {
-	  ry = sy + radius;
-	  rx = myRand - C_hp + sx;
-	  rx = min( C_sW - 1, max( 0,rx) ) ;
-	  picked = 1;
-	}
-	else if ( cardinal == 3 && sx + radius < C_sW ) {
-	  ry = myRand - C_hp + sy;
-	  ry = min( C_sH - 1, max( 0, ry ) );
-	  rx = sx + radius;
-	  picked = 1;
-	}
+        // little switch to select a patch on the edge of radius
+        if ( cardinal == 0 && sy - radius > 0 ) {
+          ry     = sy - radius;
+          rx     = myRand - C_hp + sx;
+          rx     = min( C_sW - 1, max( 0, rx ) );
+          picked = 1;
+        }
+        else if ( cardinal == 1 && sx - radius > 0 ) {
+          ry     = myRand - C_hp + sy;
+          ry     = min( C_sH - 1, max( 0, ry ) );
+          rx     = sx - radius;
+          picked = 1;
+        }
+        else if ( cardinal == 2 && sy + radius < C_sH ) {
+          ry     = sy + radius;
+          rx     = myRand - C_hp + sx;
+          rx     = min( C_sW - 1, max( 0,rx) ) ;
+          picked = 1;
+        }
+        else if ( cardinal == 3 && sx + radius < C_sW ) {
+          ry     = myRand - C_hp + sy;
+          ry     = min( C_sH - 1, max( 0, ry ) );
+          rx     = sx + radius;
+          picked = 1;
+        }
       }
 
       float rdist = nn_dist_patch_gpu( F_dev, idx, idy, rx, ry );
 
       if ( rdist < dist ) {
-	sx   = rx;
-	sy   = ry;
-	dist = rdist;
+        sx   = rx;
+        sy   = ry;
+        dist = rdist;
       } 
 
       newMap_dev[f].x    = sx;
       newMap_dev[f].y    = sy;
       newMap_dev[f].dist = dist;
-      //	__syncthreads();
+      //  __syncthreads();
     }
     //__syncthreads();
   }

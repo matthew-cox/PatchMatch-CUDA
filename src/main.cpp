@@ -71,9 +71,9 @@ int main ( int argc, char **argv ) {
   // visualize the random map
   if ( NNF_VIZ ) {
     //cutilCheckError( cutStopTimer( timer ) );
-  	nn_viz_map( fWidth, fHeight, h_snd, sWidth, sHeight, h_map, "cpu-iter-0.bmp" );
+    nn_viz_map( fWidth, fHeight, h_snd, sWidth, sHeight, h_map, "cpu-iter-0.bmp" );
     //cutilCheckError( cutStartTimer( timer ) );
-	}
+  }
 
   /******************************************************************************/
   // CPU iteration loop
@@ -93,13 +93,13 @@ int main ( int argc, char **argv ) {
     h_map = newMap;
 
     // viz the iterations?
-  	if ( NNF_VIZ ) {
-    	char fname[64];
-    	sprintf( fname, "cpu-iter-%i.bmp", i );
+    if ( NNF_VIZ ) {
+      char fname[64];
+      sprintf( fname, "cpu-iter-%i.bmp", i );
 
-    	if ( NNF_DEBUG ){ printf( "Saving iteration %i output...\n", i ); }
-    	nn_viz_map( fWidth, fHeight, h_snd, sWidth, sHeight, h_map, fname );
-		}
+      if ( NNF_DEBUG ){ printf( "Saving iteration %i output...\n", i ); }
+      nn_viz_map( fWidth, fHeight, h_snd, sWidth, sHeight, h_map, fname );
+    }
   }
 
   nn_viz_map( fWidth, fHeight, h_snd, sWidth, sHeight, h_map, "cpu-output.bmp" );
@@ -112,35 +112,35 @@ int main ( int argc, char **argv ) {
   printf( "Patch size: %i x %i, Total CPU time: %10.3f msec\n", pSize, pSize, totalTime );
   printf( "         Average Iteration CPU time: %10.3f msec\n", totalTime / (float)ITERATIONS );
 
-	/******************************************************************************/
-	// GPU iterations
-	totalTime = maxErr = 0;
-	printf( "GPU Timer starts...\n" );
+  /******************************************************************************/
+  // GPU iterations
+  totalTime = maxErr = 0;
+  printf( "GPU Timer starts...\n" );
 
-	cutilCheckError( cutResetTimer( timer ) );
-	cutilCheckError( cutStartTimer( timer ) );
+  cutilCheckError( cutResetTimer( timer ) );
+  cutilCheckError( cutStartTimer( timer ) );
 
   // randomly allocate initial pixel map - size of original image
   mapent *curMap;
   curMap = (mapent*) malloc( fPixels * sizeof( mapent ) );
   nn_random_map( h_fst, fWidth, fHeight, h_snd, sWidth, sHeight, curMap );
 
-	mapent *newMap;
+  mapent *newMap;
   newMap = (mapent*) malloc( fPixels * sizeof( mapent ) );
 
   //cutilCheckError( cutStopTimer( timer ) );
-	//totalTime += cutGetTimerValue( timer );
+  //totalTime += cutGetTimerValue( timer );
 
-	// do the search
-	//totalTime += nn_search_gpu( h_fst, fWidth, fHeight, h_snd, sWidth, sHeight, curMap, newMap );
-	nn_search_gpu( h_fst, fWidth, fHeight, h_snd, sWidth, sHeight, curMap, newMap );
+  // do the search
+  //totalTime += nn_search_gpu( h_fst, fWidth, fHeight, h_snd, sWidth, sHeight, curMap, newMap );
+  nn_search_gpu( h_fst, fWidth, fHeight, h_snd, sWidth, sHeight, curMap, newMap );
 
   // save final image
   nn_viz_map( fWidth, fHeight, h_snd, sWidth, sHeight, newMap, "gpu-output.bmp" );
 
   cutilCheckError( cutStopTimer( timer ) ); 
-	totalTime += cutGetTimerValue( timer );
-	//cutilSafeCall( cudaThreadSynchronize() );
+  totalTime += cutGetTimerValue( timer );
+  //cutilSafeCall( cudaThreadSynchronize() );
 
   printf( "Patch size: %i x %i, Total GPU time: %10.3f msec\n", pSize, pSize, totalTime );
   printf( "         Average Iteration GPU time: %10.3f msec\n", totalTime / (float)ITERATIONS );

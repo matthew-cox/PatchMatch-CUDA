@@ -36,37 +36,37 @@ void nn_viz_map( int fWidth, int fHeight, uchar4 *second, int sWidth, int sHeigh
 
   int fPixels = fWidth * fHeight;
 
- 	uchar4 *dest;
- 	dest = (uchar4*) malloc( fPixels * sizeof( uchar4 ) );
+  uchar4 *dest;
+  dest = (uchar4*) malloc( fPixels * sizeof( uchar4 ) );
 
   if ( NNF_VIZ_VOTE ) {
 
-  	// use the voting algorithm for the output
-  	bidirectional_similarity_vote( second, sWidth, sHeight, dest, fWidth, fHeight, curMap );
-	}
-	else {
+    // use the voting algorithm for the output
+    bidirectional_similarity_vote( second, sWidth, sHeight, dest, fWidth, fHeight, curMap );
+  }
+  else {
 
-  	// visualize the map - get the pixel data from the second image
-  	int idx = 0;
-  	for ( int y = 0; y < fHeight; y++ ) {
-    	for ( int x = 0; x < fWidth; x++ ) {
+    // visualize the map - get the pixel data from the second image
+    int idx = 0;
+    for ( int y = 0; y < fHeight; y++ ) {
+      for ( int x = 0; x < fWidth; x++ ) {
 
-      	if ( curMap[idx].x < 0 || curMap[idx].x > sWidth ) {
+        if ( curMap[idx].x < 0 || curMap[idx].x > sWidth ) {
 
-					printf( "Buh! Bad X posistion '%i' at %i,%i\n", curMap[idx].x, x, y );
-      	}
-      	else if ( curMap[idx].y < 0 || curMap[idx].y > sHeight ) {
+          printf( "Buh! Bad X posistion '%i' at %i,%i\n", curMap[idx].x, x, y );
+        }
+        else if ( curMap[idx].y < 0 || curMap[idx].y > sHeight ) {
 
-					printf( "Buh! Bad Y posistion '%i' at %i,%i\n", curMap[idx].y, x, y );
-      	}
-      	else {
-					int sidx = ( curMap[idx].y * sWidth ) + curMap[idx].x;
-        	dest[idx] = second[sidx];
-      	}
-      	idx++;
-    	}
-  	}	 
-	}
+          printf( "Buh! Bad Y posistion '%i' at %i,%i\n", curMap[idx].y, x, y );
+        }
+        else {
+          int sidx  = ( curMap[idx].y * sWidth ) + curMap[idx].x;
+          dest[idx] = second[sidx];
+        }
+        idx++;
+      }
+    }  
+  }
 
   // save output to BMP file
   printf( "nn_viz_map :: Saving data to '%s'...\n", outName );
@@ -85,8 +85,8 @@ void nn_viz_map( int fWidth, int fHeight, uchar4 *second, int sWidth, int sHeigh
 float nn_dist( uchar4 first, uchar4 secnd ) {
 
   float dist = sqrt( ( first.x - secnd.x ) * ( first.x - secnd.x ) +
-		     ( first.y - secnd.y ) * ( first.y - secnd.y ) +
-		     ( first.z - secnd.z ) * ( first.z - secnd.z ) );
+                     ( first.y - secnd.y ) * ( first.y - secnd.y ) +
+                     ( first.z - secnd.z ) * ( first.z - secnd.z ) );
 
   return dist;
 }
@@ -132,15 +132,15 @@ float nn_dist_patch( uchar4* img1, int x1, int y1, int width1, int height1, ucha
  */
 void nn_random_map( uchar4 *first, int fWidth, int fHeight, uchar4 *second, int sWidth, int sHeight, mapent *map ) {
 
-//  map = (mapent*) malloc( fPixels * sizeof( mapent ) );
+  //  map = (mapent*) malloc( fPixels * sizeof( mapent ) );
   int idx = 0;
   for ( int y = 0; y < fHeight; y++ ) {
     for ( int x = 0; x < fWidth; x++ ) {
       int rx = random() % sWidth;
       int ry = random() % sHeight;
       
-      map[idx].x  = rx;
-      map[idx].y  = ry;
+      map[idx].x    = rx;
+      map[idx].y    = ry;
       map[idx].dist = nn_dist_patch( first, x, y, fWidth, fHeight, second, rx, ry, sWidth, sHeight );
       //printf( "Distance for %i,%i to %i,%i is '%f'\n", x, y, map[idx].x, map[idx].y , map[idx].dist );
       idx++;
@@ -165,7 +165,7 @@ void nn_search( uchar4 *first, int fWidth, int fHeight, uchar4 *second, int sWid
   //int sPixels = sWidth * sHeight;
 
   // how many rows before and after best match to look
-  // goal is to check a HALD_PATCH x HALF_PATCH region around current pixel
+  // goal is to check a HALF_PATCH x HALF_PATCH region around current pixel
   //int lookPix = HALF_PATCH * fWidth; // need this many rows before/after to form box
   //printf( "lookRow='%i' --- lookPix='%i'\n", HALF_PATCH, lookPix );
 
@@ -198,16 +198,16 @@ void nn_search( uchar4 *first, int fWidth, int fHeight, uchar4 *second, int sWid
 
         int nearIdx = f - 1;
 
-	// if the patch to the left has a better distance to its match
+        // if the patch to the left has a better distance to its match
         // and it is not on the edge of the "second" image
         if ( ( curMap[ nearIdx ].dist < dist ) && ( curMap[ nearIdx ].x > 0 ) ) {
 
           //printf( "left patch has better dist...\n" );
           sx   = curMap[ nearIdx ].x - 1; 
           sy   = curMap[ nearIdx ].y; 
-	  dist = nn_dist_patch( first, fx, fy, fWidth, fHeight, second, sx, sy, sWidth, sHeight );
-	  //printf( "new coords are %i,%i\n", sx, sy );
-	}
+          dist = nn_dist_patch( first, fx, fy, fWidth, fHeight, second, sx, sy, sWidth, sHeight );
+          //printf( "new coords are %i,%i\n", sx, sy );
+        }
       }
       
       // check pixel above (previous row)
@@ -215,152 +215,148 @@ void nn_search( uchar4 *first, int fWidth, int fHeight, uchar4 *second, int sWid
 
         int nearIdx = f - fWidth;
 
-	// if the patch to the left has a better distance to its match
+        // if the patch to the left has a better distance to its match
         // and it is not on the top edge of the "second" image
         if ( ( curMap[ nearIdx ].dist < dist ) && ( curMap[ nearIdx ].y > 0 ) ) {
 
           //printf( "up patch has better dist...\n" );
           sx   = curMap[ nearIdx ].x; 
           sy   = curMap[ nearIdx ].y - 1; 
-	  dist = nn_dist_patch( first, fx, fy, fWidth, fHeight, second, sx, sy, sWidth, sHeight ); 
-	  //printf( "new coords are %i,%i\n", sx, sy );
+          dist = nn_dist_patch( first, fx, fy, fWidth, fHeight, second, sx, sy, sWidth, sHeight ); 
+          //printf( "new coords are %i,%i\n", sx, sy );
         }
       }
 
       // search random regions around the point
       for ( int search = 3; search > 0; search-- ) {
 
-	// radius to use
+        // radius to use
         int radius = search * HALF_PATCH;
 
         int rx = 0;
         int ry = 0;        
 
-	int picked = 0;
-	while ( !picked ) {
+        int picked = 0;
+        while ( !picked ) {
 
-	  // north, south, east or west
-	  int cardinal = random() % 4;
+          // north, south, east or west
+          int cardinal = random() % 4;
 
-	  // little switch to select a patch on the edge of radius
-	  switch ( cardinal ) {
+          // little switch to select a patch on the edge of radius
+          switch ( cardinal ) {
 
-	  case 0: 
-	    if ( sy - radius > 0 ) {
-	      ry = sy - radius;
-	      rx = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sx;
-	      rx = min(sWidth-1,max(0,rx));
-	      picked = 1;
-	    }
-	    break;
+            case 0: 
+              if ( sy - radius > 0 ) {
+                ry = sy - radius;
+                rx = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sx;
+                rx = min(sWidth-1,max(0,rx));
+                picked = 1;
+              }
+              break;
 
-	  case 1:
-	    if ( sx - radius > 0 ) {
-	      ry = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sy;
-	      ry = min( sHeight - 1, max( 0, ry ) );
-	      rx = sx - radius;
-	      picked = 1;
-	    }
-	    break;
+            case 1:
+              if ( sx - radius > 0 ) {
+                ry     = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sy;
+                ry     = min( sHeight - 1, max( 0, ry ) );
+                rx     = sx - radius;
+                picked = 1;
+              }
+              break;
 
-	  case 2:
-	    if ( sy + radius < sHeight ) {
-	      ry = sy + radius;
-	      rx = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sx;
-	      rx = min( sWidth - 1, max( 0,rx) ) ;
-	      picked = 1;
-	    }
-	    break;
+            case 2:
+              if ( sy + radius < sHeight ) {
+                ry     = sy + radius;
+                rx     = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sx;
+                rx     = min( sWidth - 1, max( 0,rx) ) ;
+                picked = 1;
+              }
+              break;
 
-	  case 3:
-	    if ( sx + radius < sWidth ) {
-	      ry = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sy;
-	      ry = min( sHeight - 1, max( 0, ry ) );
-	      rx = sx + radius;
-	      picked = 1;
-	    }
-	    break;
-	  }
+            case 3:
+              if ( sx + radius < sWidth ) {
+                ry     = ( random() % ( 2 * HALF_PATCH + 1 ) ) - HALF_PATCH + sy;
+                ry     = min( sHeight - 1, max( 0, ry ) );
+                rx     = sx + radius;
+                picked = 1;
+              }
+              break;
+          }
         }
 
-	//printf( "checking random patch %i,%i\n", rx, ry );fflush(stdout);
+        //printf( "checking random patch %i,%i\n", rx, ry );fflush(stdout);
         float rdist = nn_dist_patch( first, fx, fy, fWidth, fHeight, second, rx, ry, sWidth, sHeight );
 
-	//printf( "dist is %.2f", rdist );fflush(stdout);
+        //printf( "dist is %.2f", rdist );fflush(stdout);
 
         if ( rdist < dist ) {
-
-	  sx   = rx;
-	  sy   = ry;
-	  dist = rdist;
-
-	  //printf( "radom pixel is better\n" ); fflush(stdout);
-          
+          //printf( "radom pixel is better\n" ); fflush(stdout);
+          sx   = rx;
+          sy   = ry;
+          dist = rdist;
         } 
 
         /*
-      int startPos = pos;
+        int startPos = pos;
 
-      //printf( "startPos for %i is '%i'\n", f, startPos );
-	// limit the search region
+        //printf( "startPos for %i is '%i'\n", f, startPos );
+        // limit the search region
         int minPix = startPos - lookPix * search;
         if ( minPix < 0 ) { minPix = 0; }
 
         int maxPix = startPos + lookPix * search;
         if ( maxPix > sPixels ) { maxPix = sPixels; }
 
-	int patchCenter = ( rand() % ( maxPix - minPix + 1 ) ) + minPix;
+        int patchCenter = ( rand() % ( maxPix - minPix + 1 ) ) + minPix;
 
-	int x1 = patchCenter / fWidth; // - ( search * HALF_PATCH );
-	int y1 = patchCenter - ( x1 * fWidth );
+        int x1 = patchCenter / fWidth; // - ( search * HALF_PATCH );
+        int y1 = patchCenter - ( x1 * fWidth );
         int pad = ( search * HALF_PATCH * 2 );
 
-	//printf( "search range = '%i' -- pad = '%i'\n", search, pad );
-	//printf( "%i x %i == %i\n", x1, y1, pos );
+        //printf( "search range = '%i' -- pad = '%i'\n", search, pad );
+        //printf( "%i x %i == %i\n", x1, y1, pos );
 
-	int numChecked = 0;
+        int numChecked = 0;
 
-	for ( int x2 = 0; x2 < fWidth; x2++ ) {
+        for ( int x2 = 0; x2 < fWidth; x2++ ) {
 
-	  // limit to patch region around center pix
-	  if ( x2 < ( x1 + HALF_PATCH ) && x2 > ( x1 - HALF_PATCH ) ) {
+          // limit to patch region around center pix
+          if ( x2 < ( x1 + HALF_PATCH ) && x2 > ( x1 - HALF_PATCH ) ) {
 
-	    for ( int y2 = 0; y2 < fHeight; y2++ ) {
+            for ( int y2 = 0; y2 < fHeight; y2++ ) {
 
-	      // limit to patch region around center pix
-	      if ( y2 < ( y1 + HALF_PATCH ) && y2 > ( y1 - HALF_PATCH ) ) {
+              // limit to patch region around center pix
+              if ( y2 < ( y1 + HALF_PATCH ) && y2 > ( y1 - HALF_PATCH ) ) {
 
-	         int linearPos = ( x2 * fWidth ) + y2;
+                int linearPos = ( x2 * fWidth ) + y2;
 
-		 // clamp to image boundaries
-		 if ( linearPos > 0 && linearPos < sPixels ) {
-	           //printf( "%i x %i == %i\n", x2, y2, linearPos );
-		   numChecked++;
+                // clamp to image boundaries
+                if ( linearPos > 0 && linearPos < sPixels ) {
+                  //printf( "%i x %i == %i\n", x2, y2, linearPos );
+                  numChecked++;
 
-		  float nDist = nn_dist( first[f], second[linearPos] );
+                  float nDist = nn_dist( first[f], second[linearPos] );
 
-            	  if ( nDist < dist ) {
+                  if ( nDist < dist ) {
 
-		     //printf( "Better dist (%f) found at %i\n", nDist, linearPos );
-		     pos = linearPos;
-		     dist = nDist;
+                     //printf( "Better dist (%f) found at %i\n", nDist, linearPos );
+                     pos = linearPos;
+                     dist = nDist;
                   }
-		}
-	      }
-	    }
-	  }*/
-
-
-	}
-
-				//printf( "Random Center = '%i' -- num checked '%i'\n", patchCenter, numChecked );
-        // store the results
-        //printf( "endPos for %i is '%i,%i'\n", f, sx, sy );fflush(stdout);
-        newMap[f].x    = sx;
-        newMap[f].y    = sy;
-        newMap[f].dist = dist;
+                }
+            }
+          }
+        }
+        */
       }
-   }
+
+      //printf( "Random Center = '%i' -- num checked '%i'\n", patchCenter, numChecked );
+      // store the results
+      //printf( "endPos for %i is '%i,%i'\n", f, sx, sy );fflush(stdout);
+      newMap[f].x    = sx;
+      newMap[f].y    = sy;
+      newMap[f].dist = dist;
+    }
+  }
 }
 
 //void nn_scan( uchar4 *first, int fPix, 

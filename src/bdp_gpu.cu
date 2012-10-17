@@ -71,89 +71,89 @@ __global__ void retarget_map_init_phase_1_kernel(uchar4* D_src, uchar4* D_dest, 
  */
 __global__ void bidirectional_similarity_vote_kernel( uchar4* D_dest, mapent* D_map, mapent* D_revMap ) {
 
+  // this value is constant for all pixels
+  int num_cohere = (2*HALF_PATCH+1)*(2*HALF_PATCH+1);
+
+  unsigned int i   = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned int j   = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned int idx = j*C_fW + i;
+  if ( ( i < C_fW ) && ( j < C_fH ) ) {
+    // sums for coherence and completeness
+    float cohere_sum[3], complete_sum[3];
+    cohere_sum[0]   = cohere_sum[1]   = cohere_sum[2]   = 0;
+    complete_sum[0] = complete_sum[1] = complete_sum[2] = 0;
+
+
+    // number of patches that contribute for completeness
+    int num_complete = 0;
+
+    // boundries of where map will contribute to this pixel
+    int patchStartX, patchEndX, patchStartY, patchEndY;
+    patchStartX = i-HALF_PATCH;
+    patchEndX   = i+HALF_PATCH;
+    patchStartY = j-HALF_PATCH;
+    patchEndY   = j+HALF_PATCH; 
+
+    // loop over all parts of map that contribute
+    int yoff = HALF_PATCH;
+    for(int l= patchStartY; l<= patchEndY; l++) {
+
+      int xoff = HALF_PATCH;
+      for(int k= patchStartX; k<= patchEndX; k++) {                                       
+
+        // map is bound by destination image size
+        long patch_idx = max(0, min(l, C_fH-1))*C_fW + max(0, min(k,C_fW-1));
+
+        // center pixel of this patch
+        int p_x = D_map[patch_idx].x;
+        int p_y = D_map[patch_idx].y;
+        long patch_center_idx = p_y * C_sW + p_x;
+
+        // the pixel from the source image is offset from center of this patch
+        p_x += xoff;
+        p_y += yoff;
+
+        // clamped at source image boundries
+        uchar4 patchPix = tex2D( dtl_s, p_x, p_y );
+    
+        // add to coherence sum
+        cohere_sum[0] += patchPix.x;
+        cohere_sum[1] += patchPix.y;
+        cohere_sum[2] += patchPix.z;
+
+        // if the x,y stored in reverse map are the same as my coord i,j: SUCCESS!
+        if ((D_revMap[patch_center_idx].x == i) && (D_revMap[patch_center_idx].y == j)) {
   
-    // this value is constant for all pixels
-    int num_cohere = (2*HALF_PATCH+1)*(2*HALF_PATCH+1);
+          complete_sum[0] += patchPix.x;
+          complete_sum[1] += patchPix.y;
+          complete_sum[2] += patchPix.z;
+  
+          num_complete++;
+        }
 
-    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int j = blockIdx.y * blockDim.y + threadIdx.y;
-	    unsigned int idx = j*C_fW + i;
-    if ( ( i < C_fW ) && ( j < C_fH ) ) {
-      // sums for coherence and completeness
-      float cohere_sum[3], complete_sum[3];
-      cohere_sum[0] = cohere_sum[1] = cohere_sum[2] = 0;
-      complete_sum[0] = complete_sum[1] = complete_sum[2] = 0;
-
-      // number of patches that contribute for completeness
-      int num_complete = 0;
-
-      // boundries of where map will contribute to this pixel
-      int patchStartX, patchEndX, patchStartY, patchEndY;
-      patchStartX = i-HALF_PATCH;
-      patchEndX   = i+HALF_PATCH;
-      patchStartY = j-HALF_PATCH;
-      patchEndY   = j+HALF_PATCH; 
- 
-      // loop over all parts of map that contribute
-      int yoff = HALF_PATCH;
-      for(int l= patchStartY; l<= patchEndY; l++) {
-		
-	int xoff = HALF_PATCH;
-	for(int k= patchStartX; k<= patchEndX; k++) {                                       
-
-	  // map is bound by destination image size
-	  long patch_idx = max(0, min(l, C_fH-1))*C_fW + max(0, min(k,C_fW-1));
- 
-	  // center pixel of this patch
-	  int p_x = D_map[patch_idx].x;
-	  int p_y = D_map[patch_idx].y;
-	  long patch_center_idx = p_y * C_sW + p_x;
-	  
-	  // the pixel from the source image is offset from center of this patch
-	  p_x += xoff;
-	  p_y += yoff;
-
-	  // clamped at source image boundries
-	  uchar4 patchPix = tex2D( dtl_s, p_x, p_y );
-		    
-	  // add to coherence sum
-	  cohere_sum[0] += patchPix.x;
-	  cohere_sum[1] += patchPix.y;
-	  cohere_sum[2] += patchPix.z;
-	  
-	  // if the x,y stored in reverse map are the same as my coord i,j: SUCCESS!
-	  if ((D_revMap[patch_center_idx].x == i) && (D_revMap[patch_center_idx].y == j)) {
-	    
-	    complete_sum[0] += patchPix.x;
-	    complete_sum[1] += patchPix.y;
-	    complete_sum[2] += patchPix.z;
-	    
-	    num_complete++;
-	  }
-	  
-	  xoff--;	    
-	}
-	yoff--;
-		    
+        xoff--;     
       }
-
-      float s_total = C_sW*C_sH;;
-      float d_total = C_fW*C_fH;
-
-      float denom = (num_complete/(s_total)) + (num_cohere/(d_total));
-
-      complete_sum[0] /= s_total;
-      complete_sum[1] /= s_total;
-      complete_sum[2] /= s_total;
-
-      cohere_sum[0] /= d_total;
-      cohere_sum[1] /= d_total;
-      cohere_sum[2] /= d_total;
-
-      D_dest[idx].x = (int)floor((complete_sum[0] + cohere_sum[0])/denom);
-      D_dest[idx].y = (int)floor((complete_sum[1] + cohere_sum[1])/denom);
-      D_dest[idx].z = (int)floor((complete_sum[2] + cohere_sum[2])/denom);
+    
+      yoff--;
     }
+
+    float s_total = C_sW*C_sH;;
+    float d_total = C_fW*C_fH;
+
+    float denom = (num_complete/(s_total)) + (num_cohere/(d_total));
+
+    complete_sum[0] /= s_total;
+    complete_sum[1] /= s_total;
+    complete_sum[2] /= s_total;
+
+    cohere_sum[0] /= d_total;
+    cohere_sum[1] /= d_total;
+    cohere_sum[2] /= d_total;
+
+    D_dest[idx].x = (int)floor((complete_sum[0] + cohere_sum[0])/denom);
+    D_dest[idx].y = (int)floor((complete_sum[1] + cohere_sum[1])/denom);
+    D_dest[idx].z = (int)floor((complete_sum[2] + cohere_sum[2])/denom);
+  }
 }
     
 /* calculates distances for initial map */
@@ -257,10 +257,10 @@ void bidirectional_similarity_gpu_gpu(uchar4* original, int o_width, int o_heigh
   CUDA_SAFE_CALL( cudaMemcpy( curMap, D_map, d_width*d_height*sizeof(mapent), cudaMemcpyDeviceToHost ) );
   /*for (int x = 0; x < d_width*d_height; x++ ) {
       if (( curMap[x].x > s_width ) || (curMap[x].x < 0 )) {
-	    printf("BAD X DATA at %i (%i)\n", x, curMap[x].x);
+      printf("BAD X DATA at %i (%i)\n", x, curMap[x].x);
         } 
-	if (( curMap[x].y > s_height ) || (curMap[x].y < 0 )) {
-	    printf("BAD Y DATA at %i (%i)\n", x, curMap[x].y);
+  if (( curMap[x].y > s_height ) || (curMap[x].y < 0 )) {
+      printf("BAD Y DATA at %i (%i)\n", x, curMap[x].y);
         }
 
     }
@@ -281,20 +281,20 @@ void bidirectional_similarity_gpu_gpu(uchar4* original, int o_width, int o_heigh
     //printf("EM iteratrion #%i\n", emIter);
     
     for ( int nnfIter = 1; nnfIter <= ITERATIONS; nnfIter++ ) {
-      mapent* temp;	
+      mapent* temp; 
 
       //printf("calling NNF search #%i\n", nnfIter); fflush(stdout);
     
       nn_search_kernel<<< gridDim, blockDim >>>( D_rands, D_dest, D_map, D_newmap );
 
       if (NNF_VIZ) {
-	char fname[64];
-	sprintf( fname, "em-gpugpu-iter-%i-nnf-iter-%i.bmp", emIter, nnfIter );
+  char fname[64];
+  sprintf( fname, "em-gpugpu-iter-%i-nnf-iter-%i.bmp", emIter, nnfIter );
 
-	CUDA_SAFE_CALL( cudaMemcpy( newImage, D_dest, d_width*d_height*sizeof(uchar4), cudaMemcpyDeviceToHost ) );
-	SaveBMPFile( newImage, d_width, d_height, fname );
+  CUDA_SAFE_CALL( cudaMemcpy( newImage, D_dest, d_width*d_height*sizeof(uchar4), cudaMemcpyDeviceToHost ) );
+  SaveBMPFile( newImage, d_width, d_height, fname );
       }
-	    
+      
       // map new map cur map
       temp = D_map;
       D_map = D_newmap;
@@ -305,11 +305,11 @@ void bidirectional_similarity_gpu_gpu(uchar4* original, int o_width, int o_heigh
     CUDA_SAFE_CALL( cudaMemcpy( curMap, D_map, d_width*d_height*sizeof(mapent), cudaMemcpyDeviceToHost ) );
 
     /*for (int x = 0; x < d_width*d_height; x++ ) {
-	if (( curMap[x].x > s_width ) || (curMap[x].x < 0 )) {
-	    printf("BAD X DATA at %i (%i)\n", x, curMap[x].x);
+  if (( curMap[x].x > s_width ) || (curMap[x].x < 0 )) {
+      printf("BAD X DATA at %i (%i)\n", x, curMap[x].x);
         } 
-	if (( curMap[x].y > s_height ) || (curMap[x].y < 0 )) {
-	    printf("BAD Y DATA at %i (%i)\n", x, curMap[x].y);
+  if (( curMap[x].y > s_height ) || (curMap[x].y < 0 )) {
+      printf("BAD Y DATA at %i (%i)\n", x, curMap[x].y);
         }
 
     }*/
@@ -318,11 +318,11 @@ void bidirectional_similarity_gpu_gpu(uchar4* original, int o_width, int o_heigh
     gen_rev_map( curMap, d_width, d_height, &revMap, o_width, o_height );
 
     /*for (int x = 0; x < o_width*o_height; x++ ) {
-	if (( revMap[x].x > d_width )) {
-	    printf("BAD X DATA at %i (%i,%i)\n", x, revMap[x].x, d_width);
+  if (( revMap[x].x > d_width )) {
+      printf("BAD X DATA at %i (%i,%i)\n", x, revMap[x].x, d_width);
         } 
-	if (( revMap[x].y > d_height )) {
-	    printf("BAD Y DATA at %i (%i,%i)\n", x, revMap[x].y, d_height);
+  if (( revMap[x].y > d_height )) {
+      printf("BAD Y DATA at %i (%i,%i)\n", x, revMap[x].y, d_height);
         }
 
     }*/
