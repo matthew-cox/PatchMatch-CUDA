@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Patch Match GPU - Matthew Cox and Bob Kinney</title>
+</head>
+
+<body>
+<h1>Patch Match GPU - Matthew Cox and Bob Kinney</h1>
+
+<hr/>
+
+<h2>Project Overview</h2>
+
+<p>The initial goal of the project was to be able to build a set of tools for
+personal use in modifying images we've personally taken in order to crop
+random bystanders, etc.</p>
+
+<p>In practice, the application(s) we have now are simply a demonstration of algorithms discussed in the PatchMatch paper and could be used to build such tools in the future with an additional investment of effort.</b>
+
+<p>We initially targeted NNF, BDS, image retargeting, and image retargeting with constraints.  We were only able to get NNF, BDS, and image retargeting completed.  We have two applications demonstrate these:
+
+<ol>
+ <li>reconstruct - reconstruct an image only using data from another image</li>
+ <li>retarget - do a "retarget" resizing of an image</li>
+</ol>
+</p>
+
+<p><a href="README.txt">Full README for project.</a></p>
+
+<hr/>
+
+<h2>Nearest Neighbor Field (NNF)</h2>
+
+<p>NNF is used to find a best match for a given patch from a source image</p>
+
+<p><a href="nnf_search_phases.png"><img
+src="nnf_search_phases_thumb.png"/><br/>Click for full size</a> - <a href='http://www.cs.princeton.edu/gfx/pubs/Barnes_2009_PAR/patchmatch.pdf'>Image from original paper</a>.</p>
+
+<p>A breakdown of the NNF algorithm:
+
+<ol>
+  <li>Initialization - select random patch in B for patch in A as
+  initial match.</li>
+  <li>Propagation - check matches for patches immediately up and to
+  left.  If they have "better" match, use patch to up or left of that
+  patch in B.</li>
+  <li>Random Search - look for better matches in areas around current
+  match.</li>
+  <li>Repeat Propagation and Random Search steps.</li>
+</ol>
+
+</p>
+
+<hr />
+
+<h2>Reconstruct Screenshots</h2>
+
+<h3>Images with a lot of overlap</h3>
+<table border="0">
+  <tr>
+    <td>Source Image</td>
+    <td>Target Image</td>
+  </tr>
+  <tr>
+   <td><a href="pots/01-Flowerpots-view5.bmp"><img
+  src="pots/01-Flowerpots-view5_thumb.png"><br/>Click for full
+  size</a></td>
+   <td><a href="pots/00-Flowerpots-view1.bmp"><img
+  src="pots/00-Flowerpots-view1_thump.png"><br/>Click for full
+  size</a></td>
+  </tr>
+  <tr>
+    <td>Random Map</td>
+    <td>1 Iteration</td>
+    <td>2 Iterations</td>
+    <td>3 Iterations</td>
+    <td>4 Iterations</td>
+    <td>5 Iterations</td>
+  </tr>
+  <tr>
+  <td><a href="pots/iter-0.png"><img
+  src="pots/iter-0_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="pots/iter-1.png"><img
+  src="pots/iter-1_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="pots/iter-2.png"><img
+  src="pots/iter-2_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="pots/iter-3.png"><img
+  src="pots/iter-3_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="pots/iter-4.png"><img
+  src="pots/iter-4_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="pots/iter-5.png"><img
+  src="pots/iter-5_thumb.png"><br/>Click for full
+  size</a></td>
+  </tr>
+</table>
+
+<h3>Images with very little overlap</h3>
+<table border="0">
+  <tr>
+    <td>Source Image</td>
+    <td>Target Image</td>
+  </tr>
+  <tr>
+   <td><a href="temple_from_flowers/flowers.bmp"><img
+  src="temple_from_flowers/flowers_thumb.png"><br/>Click for full
+  size</a></td>
+   <td><a href="temple_from_flowers/greek_templt.bmp"><img
+  src="temple_from_flowers/greek_temple_thumb.png"><br/>Click for full
+  size</a></td>
+  </tr>
+  <tr>
+    <td>Random Map</td>
+    <td>1 Iteration</td>
+    <td>2 Iterations</td>
+    <td>3 Iterations</td>
+    <td>4 Iterations</td>
+    <td>5 Iterations</td>
+  </tr>
+  <tr>
+  <td><a href="temple_from_flowers/iter-0.png"><img
+  src="temple_from_flowers/iter-0_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="temple_from_flowers/iter-1.png"><img
+  src="temple_from_flowers/iter-1_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="temple_from_flowers/iter-2.png"><img
+  src="temple_from_flowers/iter-2_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="temple_from_flowers/iter-3.png"><img
+  src="temple_from_flowers/iter-3_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="temple_from_flowers/iter-4.png"><img
+  src="temple_from_flowers/iter-4_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="temple_from_flowers/iter-5.png"><img
+  src="temple_from_flowers/iter-5_thumb.png"><br/>Click for full
+  size</a></td>
+  </tr>
+</table>
+  
+<hr/>
+
+<h2>Bidirectional Similarity (BDS)</h2>
+
+<p>BDS is used to optimize a retargeted image, ensuring most data is
+retained during retarget (complete) and that new features are not introduced (coherent).</p>
+
+<p><a href="bds_vote.png"><img
+src="bds_vote_thumb.png"/><br/>Click for full size</a> - <a href='http://www.wisdom.weizmann.ac.il/~vision/VisualSummary/bidirectional_similarity_CVPR2008.pdf'>Image from original paper</a>.</p>
+
+<p>A breakdown of the BDS algorithm:
+
+<ol>
+  <li>Use NNF between original and retargeted image</li>
+  <li>Use a "voting" algorithm to ensure coherence and
+  completeness</li>
+  <li>Iterate</li>
+</ol>
+
+</p>
+
+<hr/>
+
+<h2>Retarget Screenshots</h2>
+
+<table border="0">
+  <tr>
+    <td>Source Image</td>
+  </tr>
+  <tr>
+   <td><a href="bds_vote/pagoda.bmp"><img
+  src="bds_vote/pagoda_thumb.png"><br/>Click for full
+  size</a></td>
+  </tr>
+  <tr>
+    <td>Initial Guess</td>
+    <td>1 Iteration</td>
+    <td>2 Iterations</td>
+    <td>3 Iterations</td>
+    <td>4 Iterations</td>
+    <td>5 Iterations</td>
+  </tr>
+  <tr>
+  <td><a href="bds_vote/iter-0.png"><img
+  src="bds_vote/iter-0_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="bds_vote/iter-1.png"><img
+  src="bds_vote/iter-1_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="bds_vote/iter-2.png"><img
+  src="bds_vote/iter-2_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="bds_vote/iter-3.png"><img
+  src="bds_vote/iter-3_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="bds_vote/iter-4.png"><img
+  src="bds_vote/iter-4_thumb.png"><br/>Click for full
+  size</a></td>
+  <td><a href="bds_vote/iter-5.png"><img
+  src="bds_vote/iter-5_thumb.png"><br/>Click for full
+  size</a></td>
+  </tr>
+</table>
+
+<hr/>
+
+<h2>Acknowledgements</h2>
+
+<ul>
+  <li>Original PatchMatch - <a
+  href="http://www.cs.princeton.edu/gfx/pubs/Barnes_2009_PAR/index.php">http://www.cs.princeton.edu/gfx/pubs/Barnes_2009_PAR/index.php</a></li>
+  <li>Bidirectional Simalarity for Image Retargetting - <a href="http://www.wisdom.weizmann.ac.il/~vision/VisualSummary/bidirectional_similarity_CVPR2008.pdf">http://www.wisdom.weizmann.ac.il/~vision/VisualSummary/bidirectional_similarity_CVPR2008.pdf</a></li>
+  <li>Middlebury Stereoscopic Datasets from 2006 (for various images)
+  - <a
+  href="http://vision.middlebury.edu/stereo/data/scenes2006/">http://vision.middlebury.edu/stereo/data/scenes2006/</a></li>
+  <li>Temple Photo - <a href="http://www.flickr.com/photos/sevenbrane/">http://www.flickr.com/photos/sevenbrane/</a></li>
+  <li>Flowers Photo - <a
+  href="http://www.flickr.com/photos/moi_of_ra/">http://www.flickr.com/photos/moi_of_ra/</a></li>
+  <li>Pagoda Photo - <a
+  href="http://www.flickr.com/photos/celie/">http://www.flickr.com/photos/celie/</a>
+</ul>
+</body> </html>
